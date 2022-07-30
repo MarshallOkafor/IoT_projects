@@ -1,5 +1,5 @@
 # Summer IoT Course 2022
-========================
+==========================================================================================================================================================
 
 This repository contains some of the IoT projects we implemented during our IoT 2022 Summer course.
 
