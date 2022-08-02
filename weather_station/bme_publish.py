@@ -16,6 +16,7 @@ import esp
 import BME280
 from machine import Pin, I2C
 import random
+import json
 
 esp.osdebug(None) # Turnoff vendor debugging message
 
@@ -113,17 +114,48 @@ try:
 except OSError as e:
   restart_and_reconnect()
 
+# Code to update the broker
+history_readings = {'temp': [], 'hum': [], 'pres': []} # Dictionary to store the readings
+prev_readings = ""
+n = 0
+
 while True:
+  print('Measuring weather conditions... ')
   try:
     if (time.time() - last_message) > message_interval:
       temp, hum, pres = read_bme_sensor()
       print(temp)
       print(hum)
       print(pres)
-      client.publish(CONFIG["TOPIC_TEMP"], temp)
-      client.publish(CONFIG["TOPIC_HUM"], hum)      
-      client.publish(CONFIG["TOPIC_PRES"], pres)
+      temporal_readings = {'t': temp, 'h': hum, 'p': pres} # Store only the latest reading
 
+      # Update the history log
+      history_readings['temp'].append(temp)
+      history_readings['hum'].append(hum)
+      history_readings['pres'].append(pres)
+
+      json_readings = json.dumps(temporal_readings) # To ensure that the values do not change
+
+      if json_readings != prev_readings:
+        print("New Readings Received!")
+        print('Reporting to MQTT Broker')
+        client.publish(CONFIG["TOPIC_TEMP"], temp)
+        client.publish(CONFIG["TOPIC_HUM"], hum)      
+        client.publish(CONFIG["TOPIC_PRES"], pres)
+        prev_readings = json_readings 
+      else:
+        print('No Change in Latest Readings')
+      
       last_message = time.time()
+      n += 1
+    
+      # Store only the last ten readings
+      if n == 10:
+        print('Maximum readings attained!')
+        print('Erasing readings and starting afresh')
+        history_readings = {'temp': [], 'hum': [], 'pres': []}
+        print('Setting n = 0')
+        n = 0
+    time.sleep(5)
   except OSError as e:
     restart_and_reconnect()
