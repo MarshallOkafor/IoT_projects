@@ -115,17 +115,9 @@ def getCurrentTime(someTime):
 
     return date + ' ' + time
 
-# Variables to keep track of publishing times
-last_message = 0
-message_interval = 5
-
-# Code to update the Receiver
-history_readings = {'temp': [], 'hum': [], 'pres': []} # Dictionary to store the readings
-prev_readings = ""
-n = 0
-
+# Code to update the receiver
 def send(lora):
-    #counter = 0
+    
     print('LoRa Temperature Sender\n')
 
     while True:
@@ -154,6 +146,6 @@ def send(lora):
 
         lora.println(payload)
 
-        #counter += 1
+        
         oled.fill(0)
         sleep(5)
